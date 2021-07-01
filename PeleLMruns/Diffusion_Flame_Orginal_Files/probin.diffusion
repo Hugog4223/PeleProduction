@@ -1,0 +1,23 @@
+ &fortin
+  fuel_ox_split = .0009
+  ox_air_split =  0.01
+  pipeTh = .000
+  pipeBL = .001
+  Vel_zero_th = .0002
+
+  blobx = .001
+  bloby = .00127
+  blobr = .001
+  blobw = .000001
+  blobT = 1200
+
+  V_fu = 0.30
+  V_ox = 0.30
+  V_air = 0
+  T_fu = 300.0
+  T_ox = 300.0
+  T_air = 300.0
+ /
+ &heattransin
+  pamb =  101325.
+ /
