@@ -10,9 +10,10 @@ using namespace amrex::literals;
 struct ProbParm
    : amrex::Gpu::Managed
 {
-   amrex::Real Pamb = 101325.0;      /* change */
+   amrex::Real P_mean = 101325.0;      /* change */
    amrex::Real fuel_ox_split = .0009;
    amrex::Real ox_air_split =  0.01;
+   amrex::Real Vel_zero_th = 0.0002;
    amrex::Real pipeTh = .000;
    amrex::Real pipeBL = .001;
    amrex::Real blobx = .001;                /* initial spark positionx */
@@ -27,13 +28,13 @@ struct ProbParm
    amrex::Real T_ox = 300.0;     /* change */
    amrex::Real T_air = 300.0;     /* change */
    
-   const amrex::Real BL_FUELPIPE = 1;
-   const amrex::Real BL_OUTFLOW  = 2;
-   const amrex::Real BL_OXIDIZER = 3;
-   const amrex::Real BL_AIR      = 4;
-   const amrex::Real BL_PIPEEND  = 5;
-   const amrex::Real BL_VOLUME   = 6;
-   const amrex::Real BL_NZONES   = 6;
+   const int BL_FUELPIPE = 1;
+   const int BL_OUTFLOW  = 2;
+   const int BL_OXIDIZER = 3;
+   const int BL_AIR      = 4;
+   const int BL_PIPEEND  = 5;
+   const int BL_VOLUME   = 6;
+   const int BL_NZONES   = 6;
 
    const amrex::Real BL_XLO = 0;
    const amrex::Real BL_YLO = 1;
@@ -45,12 +46,12 @@ struct ProbParm
 
    amrex::Array<amrex::Array<amrex::Real, NUM_ZONES>, NUM_SPECIES > Y_bc;
 
-   amrex::Array<real,NUM_ZONES> u_bc;
-   amrex::Array<real,NUM_ZONES> v_bc;
-   amrex::Array<real,NUM_ZONES> w_bc;
-   amrex::Array<real,NUM_ZONES> T_bc;
-   amrex::Array<real,NUM_ZONES> h_bc;
-   amrex::Array<real,NUM_ZONES> rho_bc;
+   amrex::Array<amrex::Real,NUM_ZONES> u_bc;
+   amrex::Array<amrex::Real,NUM_ZONES> v_bc;
+   amrex::Array<amrex::Real,NUM_ZONES> w_bc;
+   amrex::Array<amrex::Real,NUM_ZONES> T_bc;
+   amrex::Array<amrex::Real,NUM_ZONES> h_bc;
+   amrex::Array<amrex::Real,NUM_ZONES> rho_bc;
 
    amrex::Real bathID = -1;
    amrex::Real fuelID = -1;

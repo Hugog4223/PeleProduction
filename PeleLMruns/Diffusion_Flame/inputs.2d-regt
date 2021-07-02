@@ -41,11 +41,11 @@ amr.plot_int            = 100          # number of timesteps between plot files
 amr.derive_plot_vars    = rhoRT mag_vort mass_fractions
 amr.grid_log            = grdlog       # name of grid logging file
 
-	#----------------------- PROBLEM PARAMETERS---------------------
-	prob.P_mean = 101325.0
-	prob.standoff = -.022
-	prob.pertmag = 0.0004
-	prob.pmf_datafile = "drm19_pmf.dat"
+#----------------------- PROBLEM PARAMETERS---------------------
+#prob.P_mean = 101325.0
+#prob.standoff = -.022
+#prob.pertmag = 0.0004
+#prob.pmf_datafile = "drm19_pmf.dat"
 
 #--------------------REFINEMENT CONTROL------------------------
 amr.refinement_indicators = nozzle gradT flame_tracer
@@ -73,18 +73,18 @@ amr.nozzle.in_box_hi = .0012 .0006
 #---------------------PHYSICS CONTROL------------------------
 ns.fuelName          = CH4             # Fuel species name
 ns.unity_Le          = 0               # Use unity Le number transport ?
-	ns.hack_nochem       = 0               # Bypass chemistry ? 0: no, 1: yes
+#ns.hack_nochem       = 0               # Bypass chemistry ? 0: no, 1: yes
 ns.gravity        = -9.81    # body force  (gravity in MKS units)
-	peleLM.mixtureFraction.format = Cantera
-	peleLM.mixtureFraction.type   = mole
-	peleLM.mixtureFraction.oxidTank = O2:0.21 N2:0.79
-        peleLM.mixtureFraction.fuelTank = CH4:0.0414 H2:0.0412
+#peleLM.mixtureFraction.format = Cantera
+#peleLM.mixtureFraction.type   = mole
+#peleLM.mixtureFraction.oxidTank = O2:0.21 N2:0.79
+#peleLM.mixtureFraction.fuelTank = CH4:0.0414 H2:0.0412
 
 #--------------------NUMERICS CONTROL------------------------
 ns.init_iter         = 3               # Number of initial iterations to def pressure
 ns.num_divu_iters    = 3               # Number of DivU iteration at initialization
 ns.sdc_iterMAX       = 2               # Number of SDC iterations
-	ns.num_mac_sync_iter = 2               # Number of mac_sync iterations
+#ns.num_mac_sync_iter = 2               # Number of mac_sync iterations
 
 # ------------------  INPUTS TO CVODE CHEMISTRY ----------------------
 #peleLM.use_typ_vals_chem = 1          # Use species/temp typical values in CVODE   
@@ -93,16 +93,16 @@ ns.sdc_iterMAX       = 2               # Number of SDC iterations
 cvode.solve_type = dense               # CVODE Linear solve type (for Newton direction) 
 ode.analytical_jacobian = 0            # Provide analytical jacobian (from Fuego) ?
 
-	# ------------------  INPUTS TO ACTIVE CONTROL  ----------------------
-	active_control.on = 0                  # Use AC ?
-	active_control.use_temp = 1            # Default in fuel mass, rather use iso-T position ?
-	active_control.temperature = 1300.0    # Value of iso-T ?
-	active_control.tau = 1.0e-4            # Control tau (should ~ 10 dt)
-	active_control.height = 0.0070         # Where is the flame held ? Default assumes coordinate along Y in 2D or Z in 3D.
-	active_control.v = 1                   # verbose
-	active_control.velMax = 1.5            # Optional: limit inlet velocity
-	active_control.changeMax = 0.2         # Optional: limit inlet velocity changes (absolute)
-	active_control.flameDir  = 1           # Optional: flame main direction. Default: AMREX_SPACEDIM-1
+# ------------------  INPUTS TO ACTIVE CONTROL  ----------------------
+active_control.on = 0                  # Use AC ?
+active_control.use_temp = 1            # Default in fuel mass, rather use iso-T position ?
+active_control.temperature = 1300.0    # Value of iso-T ?
+active_control.tau = 1.0e-4            # Control tau (should ~ 10 dt)
+active_control.height = 0.0070         # Where is the flame held ? Default assumes coordinate along Y in 2D or Z in 3D.
+active_control.v = 1                   # verbose
+active_control.velMax = 1.5            # Optional: limit inlet velocity
+active_control.changeMax = 0.2         # Optional: limit inlet velocity changes (absolute)
+active_control.flameDir  = 1           # Optional: flame main direction. Default: AMREX_SPACEDIM-1
 
 # ---------------------------------------------------------------
 # ------------------  ADVANCED USER INPUTS ----------------------
@@ -110,21 +110,21 @@ ode.analytical_jacobian = 0            # Provide analytical jacobian (from Fuego
 
 #----------------  ADV ALGORITHM CONTROL  -------------------
 ns.sum_interval      = 1               # timesteps between computing mass
-	ns.do_reflux         = 1               # 1 => do refluxing
+#ns.do_reflux         = 1               # 1 => do refluxing
 ns.do_mac_proj       = 1               # 1 => do MAC projection
 ns.do_sync_proj      = 1               # 1 => do Sync Project
 ns.divu_relax_factor = 0.0
 ns.be_cn_theta       = 0.5
 ns.do_temp           = 1
 ns.do_diffuse_sync   = 1
-	ns.do_reflux_visc    = 1
+#ns.do_reflux_visc    = 1
 ns.zeroBndryVisc     = 1
 ns.v                 = 1
 
 # 
 ns.divu_ceiling         = 1
-ns.divu_dt_factor       = .4
-ns.min_rho_divu_ceiling = .01
+ns.divu_dt_factor       = 0.4
+ns.min_rho_divu_ceiling = 0.01
 
 # ------------------  INPUTS TO DIFFUSION CLASS --------------------
 ns.visc_tol        = 1.0e-14           # tolerence for viscous solves
@@ -139,7 +139,7 @@ diffuse.Rhs_in_abs_tol = 1
 # ------------------  INPUTS TO PROJECTION CLASS -------------------
 proj.proj_tol       = 1.0e-1        # tolerence for projections
 proj.proj_tol       = 1.0e-11       # tolerence for projections
-	proj.proj_abs_tol        = 1.0e-12 
+#proj.proj_abs_tol        = 1.0e-12 
 proj.sync_tol            = 1.0e-8     # tolerence for projections
 
 proj.rho_wgt_vel_proj = 0           # 0 => const den proj, 1 => rho weighted
@@ -147,7 +147,7 @@ proj.do_outflow_bcs      = 0
 proj.divu_minus_s_factor = .5
 proj.divu_minus_s_factor = 0.
 proj.proj_2              = 1
-	nodal_proj.verbose       = 0
+#nodal_proj.verbose       = 0
 proj.v                   = 0
 proj.Pcode          = 1
 proj.Pcode          = 0
@@ -236,16 +236,16 @@ ns.dpdt_option = 0
 godunov.slope_order = 4
 
 #-------------------  Probin parameters ----------------------------
-fuel_ox_split = .0009
+fuel_ox_split = 0.0009
 ox_air_split =  0.01
-pipeTh = .000
-pipeBL = .001
-Vel_zero_th = .0002
+pipeTh = 0.000
+pipeBL = 0.001
+Vel_zero_th = 0.0002
 
-blobx = .001                #initial spark positionx
-bloby = .00127
-blobr = .001
-blobw = .000001             #Initial spark withd
+blobx = 0.001                #initial spark positionx
+bloby = 0.00127
+blobr = 0.001
+blobw = 0.000001             #Initial spark withd
 blobT = 1200                #Initial spark Temperature
 
 V_fu = 0.30     #change

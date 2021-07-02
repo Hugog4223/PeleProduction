@@ -11,7 +11,7 @@ extern "C" {
     {
         amrex::ParmParse pp("prob");
 
-        pp.query("Pamb",   PeleLM::prob_parm->Pamb);
+        pp.query("Pamb",   PeleLM::prob_parm->P_mean);
         pp.query("fuel_ox_split", PeleLM::prob_parm->fuel_ox_split);
         pp.query("ox_air_split",  PeleLM::prob_parm->ox_air_split);
         pp.query("pipeTh",  PeleLM::prob_parm->pipeTh);
@@ -28,7 +28,7 @@ extern "C" {
         pp.query("T_ox",  PeleLM::prob_parm->T_ox);
         pp.query("T_air",  PeleLM::prob_parm->T_air);
 
-        setupbc();
+        setupbc(PeleLM::prob_parm.get());
 
         PeleLM::prob_parm->bathID = N2_ID;  
         PeleLM::prob_parm->fuelID = CH4_ID;  

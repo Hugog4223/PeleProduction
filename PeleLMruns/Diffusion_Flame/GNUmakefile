@@ -8,7 +8,7 @@ AMREX_HYDRO_HOME	 = ${TOP}/AMReX-Hydro
 DIM             = 2
 COMP            = gnu
 DEBUG           = FALSE
-USE_MPI         = FALSE
+USE_MPI         = TRUE
 USE_OMP         = FALSE
 PRECISION       = DOUBLE
 VERBOSE         = FALSE
@@ -16,7 +16,7 @@ VERBOSE         = FALSE
 Reactions_dir   := Fuego
 Transport_dir   := Simple
 Eos_dir         := Fuego
-Chemistry_Model := grimech30
+Chemistry_Model := drm19
 
 # CVODE
 USE_SUNDIALS_PP = TRUE

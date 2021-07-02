@@ -13,56 +13,25 @@
 
 #include <NavierStokesBase.H>
 #include <IndexDefines.H>
-#include <EOS.H>
-#include <Mechanism.H>
-/* #include <PelePhysics.H> */
-#include <cmath>
+#include <PelePhysics.H>
 
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
 void
-setupbc(amrex::Array4<amrex::Real> const& state,
-                 amrex::GeometryData const& geomdata,
-                 ProbParm const& prob_parm,
-                 PmfData const *pmf_data) 
+setupbc(ProbParm *prob_parm) 
 {
-    amrex::Real fuelZone;
-    amrex::Real airZone;
-    amrex::Real oxZone;
-    amrex::Real volZone;
-    amrex::Real peZone;
-    amrex::Real ofZone;
-    amrex::Real region;
+    auto eos = pele::physics::PhysicsType::eos();
 
-    amrex::Real molefrac[NUM_SPECIES] = {0.0};
     amrex::Real massfrac[NUM_SPECIES] = {0.0}; 
-   
-    amrex::Real iN2  = -1;
-    amrex::Real iO2  = -1;
-    amrex::Real iH2  = -1;
-    amrex::Real iCH4 = -1;
-    amrex::Real iCO2 = -1;
-    amrex::Real iH2O = -1;
-
-    amrex::Vector<std::string> spec_names;
-    CKSYMS_STR(spec_names);
-
-    for (int k = 0; k < NUM_SPECIES; k++){
-      if (spec_names[k]="O2") {iO2=k;
-      } else if (spec_names[k]="CH4") {iCH4=k;
-      } else if (spec_names[k]="N2") {iN2=k;
-      } else if (spec_names[k]="H2O") {iH2O=k;
-      } else if (spec_names[k]="CO2") {iCO2=k;}
-    }
 
     /*A diffusion flame*/
 
-    fuelZone = prob_parm.BL_FUELPIPE;
-    oxZone   = prob_parm.BL_OXIDIZER;
-    airZone  = prob_parm.BL_AIR;
-    volZone  = prob_parm.BL_VOLUME;
-    peZone   = prob_parm.BL_PIPEEND;
-    ofZone   = prob_parm.BL_OUTFLOW;
+    int fuelZone = prob_parm->BL_FUELPIPE;
+    int oxZone   = prob_parm->BL_OXIDIZER;
+    int airZone  = prob_parm->BL_AIR;
+    int volZone  = prob_parm->BL_VOLUME;
+    int peZone   = prob_parm->BL_PIPEEND;
+    int ofZone   = prob_parm->BL_OUTFLOW;
     
     /*Fuel*/
 
@@ -70,85 +39,82 @@ setupbc(amrex::Array4<amrex::Real> const& state,
       massfrac[n] = 0.0;
     }
 
-    massfrac[(int) iCH4] = 1.0;
-    massfrac[(int) iO2] = 0.0;
-    massfrac[(int) iH2O] = 0.0;
-    massfrac[(int) iN2] = 1.0 - massfrac[(int) iCH4] - massfrac[(int) iO2] - massfrac[(int) iH2O];
+    massfrac[CH4_ID] = 1.0;
+    massfrac[O2_ID] = 0.0;
+    massfrac[H2O_ID] = 0.0;
+    massfrac[N2_ID] = 1.0 - massfrac[CH4_ID] - massfrac[O2_ID] - massfrac[H2O_ID];
 
     for (int n = 0; n < NUM_SPECIES; n++){
-      Y_bc[fuelZone][n-1] = 0.0;
+      prob_parm->Y_bc[fuelZone][n] = 0.0;
     }
-    T_bc[fuelZone] = prob_parm.T_fu;
-    u_bc[(int) fuelZone] = 0.0;
-    v_bc[(int) fuelZone] = prob_parm.V_fu;
-    w_bc[(int) fuelZone] = 0.0;
+    prob_parm->T_bc[fuelZone] = prob_parm->T_fu;
+    prob_parm->u_bc[fuelZone] = 0.0;
+    prob_parm->v_bc[fuelZone] = prob_parm->V_fu;
+    prob_parm->w_bc[fuelZone] = 0.0;
 
     /*Oxidizer*/
     for (int n = 0; n < NUM_SPECIES; n++){
       massfrac[n] = 0.0;
     }
-    massfrac[(int) iO2] = 0.2395;
-    massfrac[(int) iCO2] = 0.000;
-    massfrac[(int) iN2] = 1.0 - massfrac[(int) iO2] - massfrac[(int) iCO2];
+    massfrac[O2_ID] = 0.2395;
+    massfrac[CO2_ID] = 0.000;
+    massfrac[N2_ID] = 1.0 - massfrac[O2_ID] - massfrac[CO2_ID];
 
     for (int n = 0; n < NUM_SPECIES; n++){
-      Y_bc[(int) oxZone][n-1] = massfrac[n];
+      prob_parm->Y_bc[oxZone][n] = massfrac[n];
     }
-    T_bc[(int) oxZone] = prob_parm.T_ox;
-    u_bc[(int) oxZone] = 0.0;
-    v_bc[(int) oxZone] = prob_parm.V_ox;
-    w_bc[(int) oxZone] = 0.0;
+    prob_parm->T_bc[oxZone] = prob_parm->T_ox;
+    prob_parm->u_bc[oxZone] = 0.0;
+    prob_parm->v_bc[oxZone] = prob_parm->V_ox;
+    prob_parm->w_bc[oxZone] = 0.0;
 
     /*air*/
     for (int n = 0; n < NUM_SPECIES; n++){
-      molefrac[n] = 0.0;
+      massfrac[n] = 0.0;
     }
-    molefrac[(int) iO2] = 0.21;
-    molefrac[(int) iN2] = 1.0 - molefrac[(int) iO2];
+    massfrac[O2_ID] = 0.21;
+    massfrac[N2_ID] = 1.0 - massfrac[O2_ID];
 
-    EOS::X2Y(molefrac, massfrac);
     for (int n = 0; n < NUM_SPECIES; n++){
-      Y_bc[(int) airZone][n-1] = molefrac[n];
+      prob_parm->Y_bc[airZone][n] = massfrac[n];
     }
-
-    T_bc[(int) airZone] = prob_parm.T_air;
-    u_bc[(int) airZone] = 0.0;
-    v_bc[(int) airZone] = prob_parm.V_air;
-    w_bc[(int) airZone] = 0.0;
+    prob_parm->T_bc[airZone] = prob_parm->T_air;
+    prob_parm->u_bc[airZone] = 0.0;
+    prob_parm->v_bc[airZone] = prob_parm->V_air;
+    prob_parm->w_bc[airZone] = 0.0;
 
     /*pipeend*/
     for (int n = 0; n < NUM_SPECIES; n++){
-      Y_bc[(int) peZone][n-1] = Y_bc[(int) oxZone][n-1];
+      prob_parm->Y_bc[peZone][n] = prob_parm->Y_bc[oxZone][n];
     }
-    T_bc[(int) peZone] = T_bc[(int) oxZone];
-    u_bc[(int) peZone] = u_bc[(int) oxZone];
-    v_bc[(int) peZone] = 0.0;
-    w_bc[(int) peZone] = 0.0;
+    prob_parm->T_bc[peZone] = prob_parm->T_bc[oxZone];
+    prob_parm->u_bc[peZone] = prob_parm->u_bc[oxZone];
+    prob_parm->v_bc[peZone] = 0.0;
+    prob_parm->w_bc[peZone] = 0.0;
 
     /*volume(as air)*/
     for (int n = 0; n < NUM_SPECIES; n++){
-      Y_bc[(int) volZone][n-1] = Y_bc[(int) airZone][n-1];
+      prob_parm->Y_bc[volZone][n] = prob_parm->Y_bc[airZone][n];
     }
-    T_bc[(int) volZone] = T_bc[(int) airZone];
-    u_bc[(int) volZone] = u_bc[(int) airZone];
-    v_bc[(int) volZone] = v_bc[(int) airZone];
-    w_bc[(int) volZone] = 0.0;
+    prob_parm->T_bc[volZone] = prob_parm->T_bc[airZone];
+    prob_parm->u_bc[volZone] = prob_parm->u_bc[airZone];
+    prob_parm->v_bc[volZone] = prob_parm->v_bc[airZone];
+    prob_parm->w_bc[volZone] = 0.0;
 
     /*outflow(as air)*/
     for (int n = 0; n < NUM_SPECIES; n++){
-      Y_bc[(int) ofZone][n-1] = Y_bc[(int) airZone][n-1];
+      prob_parm->Y_bc[ofZone][n] = prob_parm->Y_bc[airZone][n];
     }
-    T_bc[(int) ofZone] = T_bc[(int) airZone];
-    u_bc[(int) ofZone] = u_bc[(int) airZone];
-    v_bc[(int) ofZone] = v_bc[(int) airZone];
-    w_bc[(int) ofZone] = 0.0;
+    prob_parm->T_bc[ofZone] = prob_parm->T_bc[airZone];
+    prob_parm->u_bc[ofZone] = prob_parm->u_bc[airZone];
+    prob_parm->v_bc[ofZone] = prob_parm->v_bc[airZone];
+    prob_parm->w_bc[ofZone] = 0.0;
 
-    for (int zone = 0; zone < prob_parm.BL_NZONES; zone++){
-    EOS::PYT2R(prob_parm.Pamb, &(Y_bc[zone][-1]), T_bc[zone], rho_bc[zone]);  // CGS -> MKS conversion
-
-    EOS::TY2H(T_bc[zone], &(Y_bc[zone][-1]),h_bc[zone]);  // CGS -> MKS conversion
+    amrex::Real P_cgs = prob_parm->P_mean * 10.0;
+    for (int zone = 0; zone < prob_parm->BL_NZONES; zone++){
+      eos.PYT2R(P_cgs, &(prob_parm->Y_bc[zone][0]), prob_parm->T_bc[zone], prob_parm->rho_bc[zone]);  // CGS -> MKS conversion
+      eos.TY2H(prob_parm->T_bc[zone], &(prob_parm->Y_bc[zone][0]),prob_parm->h_bc[zone]);  // CGS -> MKS conversion
     }
-    
 }
 
 AMREX_GPU_DEVICE
@@ -170,7 +136,7 @@ pelelm_initdata (int i, int j, int k,
                  const amrex::Real z = prob_lo[2] + (k+0.5)*dx[2];);
 
     constexpr amrex::Real Pi = 3.14159265358979323846264338327950288;
-
+    auto eos = pele::physics::PhysicsType::eos();
     const amrex::Real L_x = prob_hi[0] - prob_lo[0];
 
     amrex::GpuArray<amrex::Real, NUM_SPECIES + 4> pmf_vals = {0.0};
@@ -179,32 +145,25 @@ pelelm_initdata (int i, int j, int k,
     amrex::Real pert, r;
     amrex::Real y1, y2;
     amrex::Real eta, rho, T, h, u, v;
-    amrex::Real coor [3];
+    amrex::Array<amrex::Real,AMREX_SPACEDIM> coor = {AMREX_D_DECL(x,y,z)};
     amrex::Real velocity [3];
-
-    coor[0] = x; 
-    coor[1] = y;
-    coor[2] = z;
 
     pert = 0.0;
 
-    bcnormal(coor/*const amrex::Real* /*x[AMREX_SPACEDIM]*/*/, dx /*amrex::Real s_ext[DEF_NUM_STATE]*/, 1 /*const int idir*/,-1 /*const int sgn*/,time /*,amrex::GeometryData const& geomdata,
-  ProbParm const& prob_parm,
-  ACParm const& ac_parm,
-  PmfData const *pmf_data*/)
+/*    bcnormal(coor, dx , 1 ,-1 ,time);*/
 
     for (int n = 0; n < NUM_SPECIES; n++){
       state(i,j,k,DEF_first_spec+n)= massfrac[n];
     }
-    EOS::X2Y(molefrac, massfrac);
+    eos.X2Y(molefrac, massfrac);
 
     state(i,j,k,DEF_Temp) = T;
 
     if (prob_parm.blobr>0.0)
     {
-     r = sqrt((x-prom_parm.blobx)**2 + (y-prob_parm.bloby)**2);
-     eta = 0.5*(1.0 - tanh(2.0*(r-prob_parm.blobr)/prob_parm.blobw));
-     state(i,j,k,DEF_Temp) = prob_parm.blobT*eta + state(i,j,k,DEF_Temp)*(1.0-eta);
+       r = sqrt((x-prob_parm.blobx)*(x-prob_parm.blobx) + (y-prob_parm.bloby)*(y-prob_parm.bloby));
+       eta = 0.5*(1.0 - tanh(2.0*(r-prob_parm.blobr)/prob_parm.blobw));
+       state(i,j,k,DEF_Temp) = prob_parm.blobT*eta + state(i,j,k,DEF_Temp)*(1.0-eta);
     }
     state(i,j,k,Xvel) = velocity[0];
 #if ( AMREX_SPACEDIM == 2 ) 
@@ -214,12 +173,12 @@ pelelm_initdata (int i, int j, int k,
 #endif
 
     amrex::Real rho_cgs, P_cgs;
-    P_cgs = prob_parm.Pamb * 10.0;
+    P_cgs = prob_parm.P_mean * 10.0;
 
-    EOS::PYT2R(P_cgs, massfrac, state(i,j,k,DEF_Temp), rho_cgs);
+    eos.PYT2R(P_cgs, massfrac, state(i,j,k,DEF_Temp), rho_cgs);
     state(i,j,k,Density) = rho_cgs * 1.0e3;            // CGS -> MKS conversion
 
-    EOS::TY2H(state(i,j,k,DEF_Temp), massfrac, state(i,j,k,DEF_RhoH));
+    eos.TY2H(state(i,j,k,DEF_Temp), massfrac, state(i,j,k,DEF_RhoH));
     state(i,j,k,DEF_RhoH) = state(i,j,k,DEF_RhoH) * 1.0e-4 * state(i,j,k,Density);   // CGS -> MKS conversion
 
     for (int n = 0; n < NUM_SPECIES; n++) {
@@ -230,21 +189,25 @@ pelelm_initdata (int i, int j, int k,
 
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
-int getZone(
-  const int x,
-  const int y)
+int getZone(amrex::GeometryData const& geomdata,
+            ProbParm const& prob_parm,
+            const amrex::Real x,
+            const amrex::Real y)
 {
-  int getZone=prob_parm.BL_VOLUME
-  if (y <= prob_lo[1]) {
-      if (abs(x) <= fuel_ox_split) { 
-          getZone = prob_parm.BL_FUELPIPE; 
-      } else if (abs(x) <= fuel_ox_split+pipeTh) {
-          getZone = prob_parm.BL_PIPEEND;
-      } else if (abs(x) <= ox_air_split) {
-          getZone = prob_parm.BL_OXIDIZER;
-      } else { getZone = BL_AIR; }
+  const amrex::Real* prob_lo = geomdata.ProbLo();
+  const amrex::Real* prob_hi = geomdata.ProbHi();
+  int getZone=prob_parm.BL_VOLUME;
 
-   
+  if (y <= prob_lo[1]) {
+      if (abs(x) <= prob_parm.fuel_ox_split) { 
+          getZone = prob_parm.BL_FUELPIPE; 
+      } else if (abs(x) <= prob_parm.fuel_ox_split+prob_parm.pipeTh) {
+          getZone = prob_parm.BL_PIPEEND;
+      } else if (abs(x) <= prob_parm.ox_air_split) {
+          getZone = prob_parm.BL_OXIDIZER;
+      } else { 
+         getZone = prob_parm.BL_AIR;
+      }
   } else if (y >= prob_hi[1]) {
       getZone = prob_parm.BL_OUTFLOW;}
 
@@ -255,16 +218,17 @@ AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
 void
 bcnormal(
-  const amrex::Real* /*x[AMREX_SPACEDIM]*/,
-  amrex::Real s_ext[DEF_NUM_STATE],
-  const int idir,
-  const int sgn,
-  const amrex::Real time,
-  amrex::GeometryData const& geomdata,
-  ProbParm const& prob_parm,
-  ACParm const& ac_parm,
-  PmfData const *pmf_data)
+         const amrex::Real x[AMREX_SPACEDIM],
+         amrex::Real s_ext[DEF_NUM_STATE],
+         const int idir,
+         const int sgn,
+         const amrex::Real time,
+         amrex::GeometryData const& geomdata,
+         ProbParm const& prob_parm,
+         ACParm const& ac_parm,
+         PmfData const *pmf_data)
 {
+  auto eos = pele::physics::PhysicsType::eos();
   const amrex::Real* prob_lo = geomdata.ProbLo();
   amrex::GpuArray<amrex::Real, NUM_SPECIES + 4> pmf_vals = {0.0};
   amrex::Real molefrac[NUM_SPECIES] = {0.0};
@@ -277,72 +241,82 @@ bcnormal(
   amrex::Real zoneL, zoneR, zoneT;
 
   if (sgn == 1) {
-    zone = getZone(x[0],x[1]);
-
+    zone = getZone(geomdata,prob_parm,x[0],x[1]);
     if (!ac_parm.ctrl_active || time <= 0.0) {
-       if (zone == BL_OUTFLOW) {
-          rho= prob_parm.rho_bc[zone];
-          for (int n = 0; n < NUM_SPECIES; n++) {
-             massfrac[n]=prob_parm.Y_bc[zone][n];
-           }
-          T = T_bc[zone];
-          h = h_bc[zone];
-       s_ext[Xvel] = 0.0;
-       s_ext[Yvel] = prob_parm.v_bc[zone];
-       s_ext[Zvel] = 0.0;
+      if (zone == prob_parm.BL_OUTFLOW) {
+        rho= prob_parm.rho_bc[zone];
+        for (int n = 0; n < NUM_SPECIES; n++) {
+           massfrac[n]=prob_parm.Y_bc[zone][n];
+        }
+        T = prob_parm.T_bc[zone];
+        h = prob_parm.h_bc[zone];
+        s_ext[Xvel] = 0.0;
+        s_ext[Yvel] = prob_parm.v_bc[zone];
+#if ( AMREX_SPACEDIM == 3 )
+        s_ext[Zvel] = 0.0;
+#endif
     } else {
-         zoneL = BL_FUELPIPE;
-         zoneR = BL_OXIDIZER;
-         zoneT = BL_VOLUME;
-         eta = 0.50*(1.0 - tanh(2.0*(ABS(x[0])-fuel_ox_split)/blobw));
-         for (int n = 0; n < NUM_SPECIES; n++) {
+        zoneL = prob_parm.BL_FUELPIPE;
+        zoneR = prob_parm.BL_OXIDIZER;
+        zoneT = prob_parm.BL_VOLUME;
+        eta = 0.50*(1.0 - tanh(2.0*(abs(x[0])-prob_parm.fuel_ox_split)/prob_parm.blobw));
+        for (int n = 0; n < NUM_SPECIES; n++) {
             massfrac[n]=prob_parm.Y_bc[zoneL][n]*eta + prob_parm.Y_bc[zoneR][n]*(1.0-eta);
-         }       
-         T = T_bc[zoneL]*eta + T_bc[zoneR]*(1.0-eta);
-         eta = 0.50*(1.0 - tanh(2.0*(x[1]-bloby)/blobw));
-         for (int n = 0; n < NUM_SPECIES; n++) {
-            massfrac[n]=massfrac[n]*eta + prob_parm.Y_bc[zoneT][n]*(1.0-eta);
-         }
-         T = T*eta + T_bc[zoneT]*(1.0-eta);
+        }       
+        T = prob_parm.T_bc[zoneL]*eta + prob_parm.T_bc[zoneR]*(1.0-eta);
+        eta = 0.50*(1.0 - tanh(2.0*(x[1]-prob_parm.bloby)/prob_parm.blobw));
+        for (int n = 0; n < NUM_SPECIES; n++) {
+           massfrac[n]=massfrac[n]*eta + prob_parm.Y_bc[zoneT][n]*(1.0-eta);
+        }
 
-         EOS::X2Y(molefrac, massfrac);
-         patm=prob_parm.pamb*10.0;
-         EOS::PYT2R(patm, massfrac, T, rho);  // CGS -> MKS conversion
-         s_ext[Density] = rho * 1.0e3;
+        T = T*eta + prob_parm.T_bc[zoneT]*(1.0-eta);
 
-         EOS::TY2H(T,massfrac,h);  // CGS -> MKS conversion
-         s_ext[Xvel] = 0.0;
+        eos.X2Y(molefrac, massfrac);
+        patm = prob_parm.P_mean*10.0;
+        eos.PYT2R(patm, massfrac, T, rho);  // CGS -> MKS conversion
+        s_ext[Density] = rho * 1.0e3;
 
-         for (int n = 0; n < NUM_SPECIES; n++) {
-           s_ext[DEF_first_spec+n] = massfrac[n] * s_ext[Density];
+        eos.TY2H(T,massfrac,h);  // CGS -> MKS conversion
+        s_ext[Xvel] = 0.0;
+
+        for (int n = 0; n < NUM_SPECIES; n++) {
+          s_ext[DEF_first_spec+n] = massfrac[n] * s_ext[Density];
+        }
+
+        if ( zone == prob_parm.BL_FUELPIPE) {
+          zoneL = prob_parm.BL_PIPEEND;
+          zoneR = prob_parm.BL_FUELPIPE;
+          amrex::Real r = prob_parm.fuel_ox_split - abs(x[0]);
+          eta = (1.0 - tanh(2.0*r/prob_parm.pipeBL));
+          s_ext[Yvel] = prob_parm.v_bc[zoneR] * std::pow(2.0, ( 1.0 - ( (abs(x[0]))*(abs(x[0]))
+                                                                        / (prob_parm.fuel_ox_split*prob_parm.fuel_ox_split) ) ) );
+#if ( AMREX_SPACEDIM == 3 )
+          s_ext[Zvel] = 0.0;
+#endif
+    } else if (zone==prob_parm.BL_OXIDIZER) {
+          zoneL = prob_parm.BL_PIPEEND;
+          zoneR = prob_parm.BL_OXIDIZER;
+          if (x[0]<(prob_parm.fuel_ox_split+prob_parm.pipeTh+prob_parm.Vel_zero_th)) {
+            s_ext[Yvel] = 0.0;            
+          } else {
+            amrex::Real r = abs(x[0]) - (prob_parm.fuel_ox_split+prob_parm.pipeTh);
+            eta = (1.0 - tanh(2.0*r/prob_parm.pipeBL));
+            s_ext[Yvel] = prob_parm.v_bc[zoneL]*eta + prob_parm.v_bc[zoneR]*(1.0-eta);
           }
-
-         zone=getZone(x[0],X[1]);
-
-         if (zone==BL_FUELPIPE) {
-               zoneL = BL_PIPEEND;
-               zoneR = BL_FUELPIPE;
-               r = fuel_ox_split - abs(x[0]);
-               eta = (1.0 - tanh(2.0*r/pipeBL));
-               s_ext[Yvel] = v_bc[zoneR]*2.0**(1-((abs(x[0]))**(2)/(fuel_ox_split**(2))));
-               s_ext[Zvel] = 0.0;
-    } else if (zone==BL_OXIDIZER) {
-               zoneL = BL_PIPEEND;
-               zoneR = BL_OXIDIZER;
-               if (x[0]<(fuel_ox_split+pipeTh+Vel_zero_th)) {
-               s_ext[Yvel] = 0.0;            
-         } else {
-               r = abs(x[0]) - (fuel_ox_split+pipeTh);
-               eta = (1.0 - tanh(2.0*r/pipeBL));
-               s_ext[Yvel] = v_bc[zoneL]*eta + v_bc[zoneR]*(1.0-eta);
-         }
-               s_ext[Zvel] = 0.0;
-       } else {
-         s_ext[Yvel] = v_bc[zone];
-         s_ext[Zvel] = 0.0;
-       }
-   }
+#if ( AMREX_SPACEDIM == 3 )
+          s_ext[Zvel] = 0.0;
+#endif
+        } else {
+          s_ext[Yvel] = prob_parm.v_bc[zone];
+#if ( AMREX_SPACEDIM == 3 )
+          s_ext[Zvel] = 0.0;
+#endif
+        }
+      }  // if !prob_parm.BL_OUTFLOW
+    }  // if !active control
+  } // if sign
 }
+
 
 
 AMREX_GPU_DEVICE
