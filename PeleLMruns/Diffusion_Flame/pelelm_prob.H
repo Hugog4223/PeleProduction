@@ -330,42 +330,6 @@ zero_visc (int i, int j, int k,
            const int  state_comp,
            const int  nComp)
 {
-      int Tid, RHid, YSid, YEid, ys, ye;
-      int xl, xr, xh, y;
-      const amrex::Real* prob_lo = geomdata.ProbLo();
-      const amrex::Real* prob_hi = geomdata.ProbHi();
-      const amrex::Real* dx      = geomdata.CellSize();
 
-      Tid  = DEF_Temp  - state_comp + AMREX_SPACEDIM;
-      RHid = DEF_RhoH    - state_comp + AMREX_SPACEDIM;
-      YSid = DEF_first_spec - state_comp + AMREX_SPACEDIM;
-      YEid = DEF_last_spec  - state_comp + AMREX_SPACEDIM;
-
-      ys = max(YSid,1);
-      ye = min(YEid,nComp);
-
-      if ((dir==1) && (lo[1] <= prob_lo[1]) && (((Tid >= 1) && (Tid  <= nComp)) || ((RHid >= 1) && (RHid <= nComp)) || ((ye - ys + 1) >= 1)) ) {
-  
-         y = (float) j*dx[1]+problo[1];
-         j = lo[1];
-         k = lo[2];
-
-         for (i = lo[0]; hi[0];) {
-            xl = (float) i*dx[0]+problo[0]; 
-            xr = ((float) i +1.0)*dx[0]+problo[0]; 
-            xh = 0.50*(xl+xr);
-            if ((getZone(xl,y)== 5 /*Bl_PIPEEND*/) ||
-                 (getZone(xh,y)== 5 /*Bl_PIPEEND*/) ||
-                 (getZone(xr,y)==5 /*Bl_PIPEEND*/)  ) {
-               if (((ye - ys + 1) >= 1)) {
-
-                  for (int n =ys; ye;) {
-                     beta(i,j,k,n) = 0.0;
-                  }
-             } // endif
-           } //endif
-         } //for
-     }//endif 
-           
 }
-#endif
+#endif 
