@@ -165,10 +165,10 @@ mac.v                    = 0
 #fabarray.mfiter_tile_size = 8 8 8
 
 #--------------------------DEBUG/REGTESTS INPUTS-----------------------------
-	amrex.regtest_reduction=1
+amrex.regtest_reduction=1
 amrex.fpe_trap_invalid = 1
-	amrex.fpe_trap_zero = 1
-	amrex.fpe_trap_overflow = 1
+amrex.fpe_trap_zero = 1
+amrex.fpe_trap_overflow = 1
 
 #--------------------------MISC/UNSORTED INPUTS-----------------------------
 #FILE = typVals_Dodecane.pp
@@ -219,7 +219,7 @@ amr.plot_files_output = 1
 
 #amr.derive_plot_vars=ALL
 
-amr.probin_file = probin.diffusion
+#amr.probin_file = probin.diffusion
 
 # ------------------  INPUTS TO PHYSICS CLASS -------------------
 ns.do_MLsync_proj = 1
@@ -236,6 +236,7 @@ ns.dpdt_option = 0
 godunov.slope_order = 4
 
 #-------------------  Probin parameters ----------------------------
+
 fuel_ox_split = 0.0009
 ox_air_split =  0.01
 pipeTh = 0.000
