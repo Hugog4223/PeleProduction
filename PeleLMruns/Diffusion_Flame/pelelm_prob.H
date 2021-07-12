@@ -5,6 +5,7 @@
 #include <AMReX_FArrayBox.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_SPACE.H>
+#include <AMReX_Algorithm.H>
 
 #include <pelelm_prob_parm.H>
 #include <pmf.H>
@@ -72,7 +73,7 @@ setupbc(ProbParm *prob_parm)
     for (int n = 0; n < NUM_SPECIES; n++){
       massfrac[n] = 0.0;
     }
-    massfrac[O2_ID] = 0.21;
+    massfrac[O2_ID] = 0.2329;
     massfrac[N2_ID] = 1.0 - massfrac[O2_ID];
 
     for (int n = 0; n < NUM_SPECIES; n++){
@@ -247,8 +248,9 @@ bcnormal(
         for (int n = 0; n < NUM_SPECIES; n++) {
            massfrac[n]=prob_parm.Y_bc[zone][n];
         }
-        T = prob_parm.T_bc[zone];
+        s_ext[DEF_Temp] = prob_parm.T_bc[zone];
         h = prob_parm.h_bc[zone];
+//      s_ext[DEF_RhoH] = h ?
         s_ext[Xvel] = 0.0;
         s_ext[Yvel] = prob_parm.v_bc[zone];
 #if ( AMREX_SPACEDIM == 3 )
@@ -330,6 +332,36 @@ zero_visc (int i, int j, int k,
            const int  state_comp,
            const int  nComp)
 {
+      int Tid, RHid, YSid, YEid, ys, ye;
+      int xl, xr, xh, y;
 
+      const amrex::Real* prob_lo = geomdata.ProbLo();
+      const amrex::Real* prob_hi = geomdata.ProbHi();
+      const amrex::Real* dx      = geomdata.CellSize();
+
+      Tid  = DEF_Temp  - state_comp + AMREX_SPACEDIM;
+      RHid = DEF_RhoH    - state_comp + AMREX_SPACEDIM;
+      YSid = DEF_first_spec - state_comp + AMREX_SPACEDIM;
+      YEid = (DEF_first_spec+NUM_SPECIES-1)  - state_comp + AMREX_SPACEDIM;
+
+      ys = std::max(YSid,1);
+      ye = std::min(YEid,nComp);
+
+      if ((dir==1) && (j <= geomdata.domain.smallEnd(2)/*domlo(2)*/) && (((Tid >= 1) && (Tid  <= nComp)) || ((RHid >= 1) && (RHid <= nComp)) || ((ye - ys + 1) >= 1)) ) {
+  
+         y = (float) j*dx[1]+prob_lo[1];
+         xl = (float) i*dx[0]+prob_lo[0]; 
+         xr = ((float) i +1.0)*dx[0]+prob_lo[0]; 
+         xh = 0.50*(xl+xr);
+         if ((getZone(geomdata,/*probParm*/,xl,y)== 5/*prob_parm.Bl_PIPEEND*/) ||
+             (getZone(geomdata,/*probParm*/,xh,y)== 5/*prob_parm.Bl_PIPEEND*/) ||
+             (getZone(geomdata,/*probParm*/,xr,y)== 5/*prob_parm.Bl_PIPEEND*/)  ) {
+              if (((ye - ys + 1) >= 1)) {
+                  for (int n =ys; ye;) {
+                     beta(i,j,k,n) = 0.0;
+                  }
+             } // endif
+           } //endif
+     }//endif 
 }
 #endif 
