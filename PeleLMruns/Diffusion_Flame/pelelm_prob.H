@@ -5,12 +5,12 @@
 #include <AMReX_FArrayBox.H>
 #include <AMReX_ParmParse.H>
 #include <AMReX_SPACE.H>
-#include <AMReX_Algorithm.H>
 
 #include <pelelm_prob_parm.H>
 #include <pmf.H>
 #include <pmf_data.H>
 #include <PeleLM_parm.H>
+#include <PeleLM.H>
 
 #include <NavierStokesBase.H>
 #include <IndexDefines.H>
@@ -250,7 +250,8 @@ bcnormal(
         }
         s_ext[DEF_Temp] = prob_parm.T_bc[zone];
         h = prob_parm.h_bc[zone];
-//      s_ext[DEF_RhoH] = h ?
+        s_ext[Density] = rho * 1.0e3;
+        s_ext[DEF_RhoH] = h * 1.0e-4 * s_ext[Density];
         s_ext[Xvel] = 0.0;
         s_ext[Yvel] = prob_parm.v_bc[zone];
 #if ( AMREX_SPACEDIM == 3 )
@@ -278,7 +279,7 @@ bcnormal(
         s_ext[Density] = rho * 1.0e3;
 
         eos.TY2H(s_ext[DEF_Temp],massfrac,RhoH_temp);  // CGS -> MKS conversion
-        s_ext[DEF_RhoH] = h * 1.0e-4 * s_ext[Density];   // CGS -> MKS conversion
+        s_ext[DEF_RhoH] = RhoH_temp * 1.0e-4 * s_ext[Density];   // CGS -> MKS conversion
         s_ext[Xvel] = 0.0;
 
         for (int n = 0; n < NUM_SPECIES; n++) {
@@ -353,9 +354,9 @@ zero_visc (int i, int j, int k,
          xl = (float) i*dx[0]+prob_lo[0]; 
          xr = ((float) i +1.0)*dx[0]+prob_lo[0]; 
          xh = 0.50*(xl+xr);
-         if ((getZone(geomdata,/*probParm*/,xl,y)== 5/*prob_parm.Bl_PIPEEND*/) ||
-             (getZone(geomdata,/*probParm*/,xh,y)== 5/*prob_parm.Bl_PIPEEND*/) ||
-             (getZone(geomdata,/*probParm*/,xr,y)== 5/*prob_parm.Bl_PIPEEND*/)  ) {
+         if ((getZone(geomdata,*(PeleLM::prob_parm.get()),xl,y)== PeleLM::prob_parm->BL_PIPEEND) ||
+             (getZone(geomdata,*(PeleLM::prob_parm.get()),xh,y)== PeleLM::prob_parm->BL_PIPEEND) ||
+             (getZone(geomdata,*(PeleLM::prob_parm.get()),xr,y)== PeleLM::prob_parm->BL_PIPEEND)  ) {
               if (((ye - ys + 1) >= 1)) {
                   for (int n =ys; ye;) {
                      beta(i,j,k,n) = 0.0;
@@ -363,5 +364,6 @@ zero_visc (int i, int j, int k,
              } // endif
            } //endif
      }//endif 
+
 }
 #endif 

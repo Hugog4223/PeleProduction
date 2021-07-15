@@ -14,6 +14,7 @@ extern "C" {
         pp.query("Pamb",   PeleLM::prob_parm->P_mean);
         pp.query("fuel_ox_split", PeleLM::prob_parm->fuel_ox_split);
         pp.query("ox_air_split",  PeleLM::prob_parm->ox_air_split);
+        pp.query("Vel_zero_th",  PeleLM::prob_parm->Vel_zero_th);
         pp.query("pipeTh",  PeleLM::prob_parm->pipeTh);
         pp.query("pipeBL",  PeleLM::prob_parm->pipeBL);
         pp.query("blobx",  PeleLM::prob_parm->blobx);

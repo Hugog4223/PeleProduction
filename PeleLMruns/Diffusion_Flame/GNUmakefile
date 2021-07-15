@@ -7,9 +7,10 @@ AMREX_HYDRO_HOME	 = ${TOP}/AMReX-Hydro
 
 DIM             = 2
 COMP            = gnu
-DEBUG           = FALSE
+DEBUG           = TRUE
 USE_MPI         = TRUE
 USE_OMP         = FALSE
+USE_CUBA        = FALSE
 PRECISION       = DOUBLE
 VERBOSE         = FALSE
 

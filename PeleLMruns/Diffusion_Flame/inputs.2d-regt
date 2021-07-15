@@ -1,8 +1,8 @@
 #----------------------DOMAIN DEFINITION------------------------
 geometry.is_periodic = 0 0 0
 geometry.coord_sys = 0 # 0 => cart, 1 => RZ
-geometry.prob_lo    = 0 0
-geometry.prob_hi    = 0.01 0.04
+geometry.prob_lo    = 0 0    #bottom left-hand corner
+geometry.prob_hi    = 0.01 0.04   #top right-hand corner
 
 # >>>>>>>>>>>>>  BC FLAGS <<<<<<<<<<<<<<<<
 # Interior, Inflow, Outflow, Symmetry,
@@ -12,27 +12,28 @@ peleLM.hi_bc = SlipWallAdiab Outflow
 
 #-------------------------AMR CONTROL----------------------------
 amr.n_cell          = 64 256   
-amr.v               = 1                # AMR verbose
-amr.max_level       = 2                # maximum level number allowed #change
+amr.v               = 1                # AMR verbose (you may see more information about the tree building process)
+amr.max_level       = 0 #2             # maximum level number allowed #change
 amr.ref_ratio       = 2 2 2            # refinement ratio
 amr.regrid_int      = 2                # how often to regrid          #change
 amr.n_error_buf     = 2 1 1 1          # number of buffer cells in error est
-amr.grid_eff        = 0.9              # what constitutes an efficient grid
+amr.grid_eff        = 0.9              # what constitutes an efficient grid (90% of the cells in each grid at the 						level at which the grid creation occurs must be tagged cells. A higher grid 						efficiency means fewer cells at higher levels, but may result in the 						production of lots of small grids)
 amr.grid_eff        = 0.7              # what constitutes an efficient grid
 amr.blocking_factor = 16               # block factor in grid generation (min box size)
 amr.max_grid_size   = 128              # max box size
 
-#----------------------TIME STEPING CONTROL----------------------
+#----------------------TIME STEPING (dt) CONTROL----------------------
 #max_step  = 4000
 max_step  = 4
-#max_step = 36000                       # maximum number of time steps
+#max_step = 36000                      # maximum number of time steps
 stop_time           = 4.0              # final physical time
+#will end the calculation when either the simulation time reaches 4.0 or the number of level 0 steps taken equals max_step, whichever comes first
 ns.cfl              = 0.2              # cfl number for hyperbolic system
-ns.init_shrink    = 0.1                # scale back initial timestep
-ns.change_max       = 1.1              # max timestep size increase
+ns.init_shrink    = 0.1                # scale back initial timestep (sets the first timestep we take to be 10% of what it would be otherwise)
+ns.change_max       = 1.1              # max timestep size increase (can't increase more than 10%)
 ns.dt_cutoff        = 5.e-10           # level 0 timestep below which we halt
 
-#-------------------------IO CONTROL----------------------------
+#-------------------------IO CONTROL(restart and Plotfile)----------------------------
 amr.checkpoint_files_output = 0
 amr.check_file          = chk          # root name of checkpoint file
 amr.check_int           = 5            # number of timesteps between checkpoints
@@ -42,10 +43,23 @@ amr.derive_plot_vars    = rhoRT mag_vort mass_fractions
 amr.grid_log            = grdlog       # name of grid logging file
 
 #----------------------- PROBLEM PARAMETERS---------------------
-#prob.P_mean = 101325.0
-#prob.standoff = -.022
-#prob.pertmag = 0.0004
-#prob.pmf_datafile = "drm19_pmf.dat"
+prob.Pamb=101325.0
+prob.fuel_ox_split = 0.0009
+prob.ox_air_split =  0.01
+prob.pipeTh = 0.000
+prob.pipeBL = 0.001
+prob.Vel_zero_th = 0.0002
+prob.blobx = 0.001                #initial spark positionx
+prob.bloby = 0.00127
+prob.blobr = 0.001
+prob.blobw = 0.000001             #Initial spark withd
+prob.blobT = 1200                #Initial spark Temperature
+prob.V_fu = 0.30     #change
+prob.V_ox = 0.30     #change
+prob.V_air = 0
+prob.T_fu = 300.0     #change
+prob.T_ox = 300.0     #change
+prob.T_air = 300.0     #change
 
 #--------------------REFINEMENT CONTROL------------------------
 amr.refinement_indicators = nozzle gradT flame_tracer
@@ -75,10 +89,6 @@ ns.fuelName          = CH4             # Fuel species name
 ns.unity_Le          = 0               # Use unity Le number transport ?
 #ns.hack_nochem       = 0               # Bypass chemistry ? 0: no, 1: yes
 ns.gravity        = -9.81    # body force  (gravity in MKS units)
-#peleLM.mixtureFraction.format = Cantera
-#peleLM.mixtureFraction.type   = mole
-#peleLM.mixtureFraction.oxidTank = O2:0.21 N2:0.79
-#peleLM.mixtureFraction.fuelTank = CH4:0.0414 H2:0.0412
 
 #--------------------NUMERICS CONTROL------------------------
 ns.init_iter         = 3               # Number of initial iterations to def pressure
@@ -95,6 +105,7 @@ cvode.solve_type = dense               # CVODE Linear solve type (for Newton dir
 ode.analytical_jacobian = 0            # Provide analytical jacobian (from Fuego) ?
 
 # ------------------  INPUTS TO ACTIVE CONTROL  ----------------------
+ns.do_active_control = 0               # Turn on active control of the inflow velocity
 active_control.on = 0                  # Use AC ?
 active_control.use_temp = 1            # Default in fuel mass, rather use iso-T position ?
 active_control.temperature = 1300.0    # Value of iso-T ?
@@ -118,7 +129,6 @@ ns.divu_relax_factor = 0.0
 ns.be_cn_theta       = 0.5
 ns.do_temp           = 1
 ns.do_diffuse_sync   = 1
-#ns.do_reflux_visc    = 1
 ns.zeroBndryVisc     = 1
 ns.v                 = 1
 
@@ -150,8 +160,6 @@ proj.divu_minus_s_factor = 0.
 proj.proj_2              = 1
 nodal_proj.verbose       = 0     #change?
 proj.v                   = 0
-#proj.Pcode          = 1
-#proj.Pcode          = 0
 proj.filter_factor  = 0.0
 
 # ------------------  INPUTS TO MACPROJ CLASS -------------------
@@ -174,6 +182,7 @@ amrex.fpe_trap_overflow = 1
 #--------------------------MISC/UNSORTED INPUTS-----------------------------
 #FILE = typVals_Dodecane.pp
 ns.reset_typical_vals_int = 5
+
 ht.vode_itol = 2
 #ht.vode_rtol = 1.e-6
 #ht.vode_atol = 1.e-6
@@ -184,7 +193,7 @@ ht.vode_itol = 2
 #ht.vode_rtol = 1.e-13
 #ht.vode_atol = 1.e-13
 
-ns.do_active_control = 0
+
 mg.smooth_on_cg_unstable=1
 
 ns.do_fillPatchUMAC=1
@@ -220,8 +229,6 @@ amr.plot_files_output = 1
 
 #amr.derive_plot_vars=ALL
 
-#amr.probin_file = probin.diffusion
-
 # ------------------  INPUTS TO PHYSICS CLASS -------------------
 ns.do_MLsync_proj = 1
 ns.do_divu_sync = 0
@@ -235,25 +242,3 @@ ns.flameTracName   = OH
 ns.dpdt_option = 0
 # ------------------  INPUTS TO GODUNOV CLASS ----------------------
 godunov.slope_order = 4
-
-#-------------------  Probin parameters ----------------------------
-
-fuel_ox_split = 0.0009
-ox_air_split =  0.01
-pipeTh = 0.000
-pipeBL = 0.001
-Vel_zero_th = 0.0002
-
-blobx = 0.001                #initial spark positionx
-bloby = 0.00127
-blobr = 0.001
-blobw = 0.000001             #Initial spark withd
-blobT = 1200                #Initial spark Temperature
-
-V_fu = 0.30     #change
-V_ox = 0.30     #change
-V_air = 0
-T_fu = 300.0     #change
-T_ox = 300.0     #change
-T_air = 300.0     #change
-
