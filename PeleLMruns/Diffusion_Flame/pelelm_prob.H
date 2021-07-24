@@ -46,7 +46,7 @@ setupbc(ProbParm *prob_parm)
     massfrac[N2_ID] = 1.0 - massfrac[CH4_ID] - massfrac[O2_ID] - massfrac[H2O_ID];
 
     for (int n = 0; n < NUM_SPECIES; n++){
-      prob_parm->Y_bc[fuelZone][n] = 0.0;
+      prob_parm->Y_bc[fuelZone][n] = massfrac[n];
     }
     prob_parm->T_bc[fuelZone] = prob_parm->T_fu;
     prob_parm->u_bc[fuelZone] = 0.0;
@@ -120,76 +120,6 @@ setupbc(ProbParm *prob_parm)
 
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
-void
-pelelm_initdata (int i, int j, int k, 
-                 amrex::Array4<amrex::Real> const& state,
-                 amrex::GeometryData const& geomdata,
-                 ProbParm const& prob_parm,
-                 PmfData const *pmf_data)
-{
-
-    const amrex::Real* prob_lo = geomdata.ProbLo();
-    const amrex::Real* prob_hi = geomdata.ProbHi();
-    const amrex::Real* dx      = geomdata.CellSize();
-
-    AMREX_D_TERM(const amrex::Real x = prob_lo[0] + (i+0.5)*dx[0];,
-                 const amrex::Real y = prob_lo[1] + (j+0.5)*dx[1];,
-                 const amrex::Real z = prob_lo[2] + (k+0.5)*dx[2];);
-
-    constexpr amrex::Real Pi = 3.14159265358979323846264338327950288;
-    auto eos = pele::physics::PhysicsType::eos();
-    const amrex::Real L_x = prob_hi[0] - prob_lo[0];
-
-    amrex::GpuArray<amrex::Real, NUM_SPECIES + 4> pmf_vals = {0.0};
-    amrex::Real molefrac[NUM_SPECIES] = {0.0};
-    amrex::Real massfrac[NUM_SPECIES] = {0.0};
-    amrex::Real pert, r;
-    amrex::Real y1, y2;
-    amrex::Real eta, rho, T, h, u, v;
-    amrex::Array<amrex::Real,AMREX_SPACEDIM> coor = {AMREX_D_DECL(x,y,z)};
-    amrex::Real velocity [3];
-
-    pert = 0.0;
-
-/*    bcnormal(coor, dx , 1 ,-1 ,time);*/
-
-    for (int n = 0; n < NUM_SPECIES; n++){
-      state(i,j,k,DEF_first_spec+n)= massfrac[n];
-    }
-    eos.X2Y(molefrac, massfrac);
-
-    state(i,j,k,DEF_Temp) = T;
-
-    if (prob_parm.blobr>0.0)
-    {
-       r = sqrt((x-prob_parm.blobx)*(x-prob_parm.blobx) + (y-prob_parm.bloby)*(y-prob_parm.bloby));
-       eta = 0.5*(1.0 - tanh(2.0*(r-prob_parm.blobr)/prob_parm.blobw));
-       state(i,j,k,DEF_Temp) = prob_parm.blobT*eta + state(i,j,k,DEF_Temp)*(1.0-eta);
-    }
-    state(i,j,k,Xvel) = velocity[0];
-#if ( AMREX_SPACEDIM == 2 ) 
-    state(i,j,k,Yvel) = velocity[1];
-#elif ( AMREX_SPACEDIM == 3 ) 
-    state(i,j,k,Zvel) = velocity[2];
-#endif
-
-    amrex::Real rho_cgs, P_cgs;
-    P_cgs = prob_parm.P_mean * 10.0;
-
-    eos.PYT2R(P_cgs, massfrac, state(i,j,k,DEF_Temp), rho_cgs);
-    state(i,j,k,Density) = rho_cgs * 1.0e3;            // CGS -> MKS conversion
-
-    eos.TY2H(state(i,j,k,DEF_Temp), massfrac, state(i,j,k,DEF_RhoH));
-    state(i,j,k,DEF_RhoH) = state(i,j,k,DEF_RhoH) * 1.0e-4 * state(i,j,k,Density);   // CGS -> MKS conversion
-
-    for (int n = 0; n < NUM_SPECIES; n++) {
-      state(i,j,k,DEF_first_spec+n) = massfrac[n] * state(i,j,k,Density);
-    }
-
-}
-
-AMREX_GPU_DEVICE
-AMREX_FORCE_INLINE
 int getZone(amrex::GeometryData const& geomdata,
             ProbParm const& prob_parm,
             const amrex::Real x,
@@ -230,8 +160,6 @@ bcnormal(
          PmfData const *pmf_data)
 {
   auto eos = pele::physics::PhysicsType::eos();
-  const amrex::Real* prob_lo = geomdata.ProbLo();
-  amrex::GpuArray<amrex::Real, NUM_SPECIES + 4> pmf_vals = {0.0};
   amrex::Real molefrac[NUM_SPECIES] = {0.0};
   amrex::Real massfrac[NUM_SPECIES] = {0.0};
   amrex::Real zone;
@@ -254,6 +182,9 @@ bcnormal(
         s_ext[DEF_RhoH] = h * 1.0e-4 * s_ext[Density];
         s_ext[Xvel] = 0.0;
         s_ext[Yvel] = prob_parm.v_bc[zone];
+        for (int n = 0; n < NUM_SPECIES; n++) {
+          s_ext[DEF_first_spec+n] = massfrac[n] * s_ext[Density];
+        }
 #if ( AMREX_SPACEDIM == 3 )
         s_ext[Zvel] = 0.0;
 #endif
@@ -273,7 +204,7 @@ bcnormal(
         amrex::Real RhoH_temp;
         s_ext[DEF_Temp] = T*eta + prob_parm.T_bc[zoneT]*(1.0-eta);
 
-        eos.X2Y(molefrac, massfrac);
+        eos.Y2X(massfrac, molefrac);
         patm = prob_parm.P_mean*10.0;
         eos.PYT2R(patm, massfrac, s_ext[DEF_Temp], rho);  // CGS -> MKS conversion
         s_ext[Density] = rho * 1.0e3;
@@ -321,6 +252,69 @@ bcnormal(
 }
 
 
+AMREX_GPU_DEVICE
+AMREX_FORCE_INLINE
+void
+pelelm_initdata (int i, int j, int k, 
+                 amrex::Array4<amrex::Real> const& state,
+                 amrex::GeometryData const& geomdata,
+                 ProbParm const& prob_parm,
+                 PmfData const *pmf_data)
+{
+
+    const amrex::Real* prob_lo = geomdata.ProbLo();
+    const amrex::Real* prob_hi = geomdata.ProbHi();
+    const amrex::Real* dx      = geomdata.CellSize();
+
+    AMREX_D_TERM(const amrex::Real x = prob_lo[0] + (i+0.5)*dx[0];,
+                 const amrex::Real y = prob_lo[1] + (j+0.5)*dx[1];,
+                 const amrex::Real z = prob_lo[2] + (k+0.5)*dx[2];);
+
+    auto eos = pele::physics::PhysicsType::eos();
+
+    amrex::Real massfrac[NUM_SPECIES] = {0.0};
+    amrex::Real r;
+    amrex::Real eta;
+    const amrex::Real coor[AMREX_SPACEDIM] = {AMREX_D_DECL(x,y,z)};
+    amrex::Real s_ext[DEF_NUM_STATE] = {0.0};
+
+
+    bcnormal(coor, s_ext, 0, 1, 0, geomdata, prob_parm, *(PeleLM::ac_parm.get()), pmf_data);
+
+    for (int n = 0; n < NUM_SPECIES; n++){
+      
+      massfrac[n]= s_ext[DEF_first_spec+n]/s_ext[Density];
+    }
+
+    state(i,j,k,DEF_Temp) = s_ext[DEF_Temp];
+
+    if (prob_parm.blobr>0.0)
+    {
+       r = sqrt((x-prob_parm.blobx)*(x-prob_parm.blobx) + (y-prob_parm.bloby)*(y-prob_parm.bloby));
+       eta = 0.5*(1.0 - tanh(2.0*(r-prob_parm.blobr)/prob_parm.blobw));
+       state(i,j,k,DEF_Temp) = prob_parm.blobT*eta + state(i,j,k,DEF_Temp)*(1.0-eta);
+    }
+    state(i,j,k,Xvel) = s_ext[Xvel];
+#if ( AMREX_SPACEDIM == 2 ) 
+    state(i,j,k,Yvel) = s_ext[Yvel];
+#elif ( AMREX_SPACEDIM == 3 ) 
+    state(i,j,k,Zvel) = s_ext[Zvel];
+#endif
+
+    amrex::Real rho_cgs, P_cgs;
+    P_cgs = prob_parm.P_mean * 10.0;
+
+    eos.PYT2R(P_cgs, massfrac, state(i,j,k,DEF_Temp), rho_cgs);
+    state(i,j,k,Density) = rho_cgs * 1.0e3;            // CGS -> MKS conversion
+
+    eos.TY2H(state(i,j,k,DEF_Temp), massfrac, state(i,j,k,DEF_RhoH));
+    state(i,j,k,DEF_RhoH) = state(i,j,k,DEF_RhoH) * 1.0e-4 * state(i,j,k,Density);   // CGS -> MKS conversion
+
+    for (int n = 0; n < NUM_SPECIES; n++) {
+      state(i,j,k,DEF_first_spec+n) = massfrac[n] * state(i,j,k,Density);
+    }
+
+}
 
 AMREX_GPU_DEVICE
 AMREX_FORCE_INLINE
@@ -337,7 +331,6 @@ zero_visc (int i, int j, int k,
       int xl, xr, xh, y;
 
       const amrex::Real* prob_lo = geomdata.ProbLo();
-      const amrex::Real* prob_hi = geomdata.ProbHi();
       const amrex::Real* dx      = geomdata.CellSize();
 
       Tid  = DEF_Temp  - state_comp + AMREX_SPACEDIM;
@@ -348,7 +341,7 @@ zero_visc (int i, int j, int k,
       ys = std::max(YSid,1);
       ye = std::min(YEid,nComp);
 
-      if ((dir==1) && (j <= geomdata.domain.smallEnd(2)/*domlo(2)*/) && (((Tid >= 1) && (Tid  <= nComp)) || ((RHid >= 1) && (RHid <= nComp)) || ((ye - ys + 1) >= 1)) ) {
+      if ((dir==1) && (j <= geomdata.domain.smallEnd(1)/*domlo(2)*/) && (((Tid >= 1) && (Tid  <= nComp)) || ((RHid >= 1) && (RHid <= nComp)) || ((ye - ys + 1) >= 1)) ) {
   
          y = (float) j*dx[1]+prob_lo[1];
          xl = (float) i*dx[0]+prob_lo[0]; 

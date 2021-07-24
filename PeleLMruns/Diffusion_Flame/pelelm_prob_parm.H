@@ -28,33 +28,21 @@ struct ProbParm
    amrex::Real T_ox = 300.0;     /* change */
    amrex::Real T_air = 300.0;     /* change */
    
-   const int BL_FUELPIPE = 1;
-   const int BL_OUTFLOW  = 2;
-   const int BL_OXIDIZER = 3;
-   const int BL_AIR      = 4;
-   const int BL_PIPEEND  = 5;
-   const int BL_VOLUME   = 6;
+   const int BL_FUELPIPE = 0;
+   const int BL_OUTFLOW  = 1;
+   const int BL_OXIDIZER = 2;
+   const int BL_AIR      = 3;
+   const int BL_PIPEEND  = 4;
+   const int BL_VOLUME   = 5;
    const int BL_NZONES   = 6;
-
-   const amrex::Real BL_XLO = 0;
-   const amrex::Real BL_YLO = 1;
-   const amrex::Real BL_XHI = 2;
-   const amrex::Real BL_YHI = 3;
-   const amrex::Real BL_ZLO = 4;
-   const amrex::Real BL_ZHI = 5;
-   const amrex::Real BL_INTERIOR = 6;
 
    amrex::Array<amrex::Array<amrex::Real, NUM_ZONES>, NUM_SPECIES > Y_bc;
 
-   amrex::Array<amrex::Real,NUM_ZONES> u_bc;
-   amrex::Array<amrex::Real,NUM_ZONES> v_bc;
-   amrex::Array<amrex::Real,NUM_ZONES> w_bc;
-   amrex::Array<amrex::Real,NUM_ZONES> T_bc;
-   amrex::Array<amrex::Real,NUM_ZONES> h_bc;
-   amrex::Array<amrex::Real,NUM_ZONES> rho_bc;
-
-   amrex::Real bathID = -1;
-   amrex::Real fuelID = -1;
-   amrex::Real oxidID = -1;
+   amrex::GpuArray<amrex::Real,NUM_ZONES> u_bc;
+   amrex::GpuArray<amrex::Real,NUM_ZONES> v_bc;
+   amrex::GpuArray<amrex::Real,NUM_ZONES> w_bc;
+   amrex::GpuArray<amrex::Real,NUM_ZONES> T_bc;
+   amrex::GpuArray<amrex::Real,NUM_ZONES> h_bc;
+   amrex::GpuArray<amrex::Real,NUM_ZONES> rho_bc;
 };
 #endif

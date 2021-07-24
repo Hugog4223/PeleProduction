@@ -9,6 +9,7 @@ extern "C" {
                          const amrex_real* /*problo*/,
                          const amrex_real* /*probhi*/)
     {
+
         amrex::ParmParse pp("prob");
 
         pp.query("Pamb",   PeleLM::prob_parm->P_mean);
@@ -30,10 +31,6 @@ extern "C" {
         pp.query("T_air",  PeleLM::prob_parm->T_air);
 
         setupbc(PeleLM::prob_parm.get());
-
-        PeleLM::prob_parm->bathID = N2_ID;  
-        PeleLM::prob_parm->fuelID = CH4_ID;  
-        PeleLM::prob_parm->oxidID = O2_ID;
 
         std::string pmf_datafile;
         pp.query("pmf_datafile", pmf_datafile);
