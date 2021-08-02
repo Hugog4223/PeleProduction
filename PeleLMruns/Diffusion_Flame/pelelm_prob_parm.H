@@ -15,17 +15,17 @@ struct ProbParm
    amrex::Real ox_air_split =  0.01;
    amrex::Real Vel_zero_th = 0.0002;
    amrex::Real pipeTh = 0.000;
-   amrex::Real pipeBL = 0.001;
+   amrex::Real pipeBL = 0.003;
    amrex::Real blobx = 0.001;                /* initial spark positionx */
    amrex::Real bloby = 0.00127;
    amrex::Real blobr = 0.001;
    amrex::Real blobw = 0.000001;            /* initial spark withd */
-   amrex::Real blobT = 1200;              /* initial spark Temperature */  
-   amrex::Real V_fu = 0.30;     /* change */
-   amrex::Real V_ox = 0.30;     /* change */  
+   amrex::Real blobT = 1900;              /* initial spark Temperature */  
+   amrex::Real V_fu = 0.3990;     /* change */
+   amrex::Real V_ox = 0.462;     /* change */  
    amrex::Real V_air = 0;
-   amrex::Real T_fu = 300.0;     /* change */
-   amrex::Real T_ox = 300.0;     /* change */
+   amrex::Real T_fu = 510.0;     /* change */
+   amrex::Real T_ox = 510.0;     /* change */
    amrex::Real T_air = 300.0;     /* change */
    
    const int BL_FUELPIPE = 0;
@@ -36,7 +36,7 @@ struct ProbParm
    const int BL_VOLUME   = 5;
    const int BL_NZONES   = 6;
 
-   amrex::Array<amrex::Array<amrex::Real, NUM_ZONES>, NUM_SPECIES > Y_bc;
+   amrex::Array<amrex::Array<amrex::Real, NUM_SPECIES>, NUM_ZONES > Y_bc;
 
    amrex::GpuArray<amrex::Real,NUM_ZONES> u_bc;
    amrex::GpuArray<amrex::Real,NUM_ZONES> v_bc;
