@@ -149,8 +149,8 @@ diffuse.Rhs_in_abs_tol = 1
 
 # ------------------  INPUTS TO PROJECTION CLASS -------------------
 proj.proj_tol       = 1.0e-1        # tolerence for projections
-proj.proj_tol       = 1.0e-10       # tolerence for projections #remove
-#proj.proj_tol       = 1.0e-11       # tolerence for projections
+#proj.proj_tol       = 1.0e-10       # tolerence for projections #remove
+proj.proj_tol       = 1.0e-11       # tolerence for projections
 #proj.proj_abs_tol        = 1.0e-12 
 proj.sync_tol            = 1.0e-8     # tolerence for projections
 

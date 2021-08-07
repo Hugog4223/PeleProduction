@@ -130,18 +130,17 @@ int getZone(amrex::GeometryData const& geomdata,
   int getZone=prob_parm.BL_VOLUME;
 
   if (y <= prob_lo[1]) {
-      if (abs(x) <= prob_parm.fuel_ox_split) { 
+      if (std::abs(x) <= prob_parm.fuel_ox_split) {
           getZone = prob_parm.BL_FUELPIPE; 
-      } else if (abs(x) <= prob_parm.fuel_ox_split+prob_parm.pipeTh) {
+      } else if (std::abs(x) <= prob_parm.fuel_ox_split+prob_parm.pipeTh) {
           getZone = prob_parm.BL_PIPEEND;
-      } else if (abs(x) <= prob_parm.ox_air_split) {
+      } else if (std::abs(x) <= prob_parm.ox_air_split) {
           getZone = prob_parm.BL_OXIDIZER;
       } else { 
          getZone = prob_parm.BL_AIR;
       }
   } else if (y >= prob_hi[1]) {
       getZone = prob_parm.BL_OUTFLOW;}
-
   return getZone;
 }
 
@@ -169,6 +168,7 @@ bcnormal(
   amrex::Real zoneL, zoneR, zoneT;
 
   if (sgn == 1) {
+
     zone = getZone(geomdata,prob_parm,x[0],x[1]);
     if (!ac_parm.ctrl_active || time <= 0.0) {
       if (zone == prob_parm.BL_OUTFLOW) {
@@ -179,6 +179,7 @@ bcnormal(
         s_ext[DEF_Temp] = prob_parm.T_bc[zone];
         h = prob_parm.h_bc[zone];
         s_ext[Density] = rho * 1.0e3;
+
         s_ext[DEF_RhoH] = h * 1.0e-4 * s_ext[Density];
         s_ext[Xvel] = 0.0;
         s_ext[Yvel] = prob_parm.v_bc[zone];
@@ -192,7 +193,8 @@ bcnormal(
         zoneL = prob_parm.BL_FUELPIPE;
         zoneR = prob_parm.BL_OXIDIZER;
         zoneT = prob_parm.BL_VOLUME;
-        eta = 0.50*(1.0 - tanh(2.0*(abs(x[0])-prob_parm.fuel_ox_split)/prob_parm.blobw));
+        eta = 0.50*(1.0 - tanh(2.0*(std::abs(x[0])-prob_parm.fuel_ox_split)/prob_parm.blobw));
+
         for (int n = 0; n < NUM_SPECIES; n++) {
             massfrac[n]=prob_parm.Y_bc[zoneL][n]*eta + prob_parm.Y_bc[zoneR][n]*(1.0-eta);
         }       
@@ -201,6 +203,7 @@ bcnormal(
         for (int n = 0; n < NUM_SPECIES; n++) {
            massfrac[n]=massfrac[n]*eta + prob_parm.Y_bc[zoneT][n]*(1.0-eta);
         }
+
         amrex::Real RhoH_temp;
         s_ext[DEF_Temp] = T*eta + prob_parm.T_bc[zoneT]*(1.0-eta);
 
@@ -216,13 +219,12 @@ bcnormal(
         for (int n = 0; n < NUM_SPECIES; n++) {
           s_ext[DEF_first_spec+n] = massfrac[n] * s_ext[Density];
         }
-
         if ( zone == prob_parm.BL_FUELPIPE) {
           zoneL = prob_parm.BL_PIPEEND;
           zoneR = prob_parm.BL_FUELPIPE;
-          amrex::Real r = prob_parm.fuel_ox_split - abs(x[0]);
+          amrex::Real r = prob_parm.fuel_ox_split - std::abs(x[0]);
           eta = (1.0 - tanh(2.0*r/prob_parm.pipeBL));
-          s_ext[Yvel] = prob_parm.v_bc[zoneR] * std::pow(2.0, ( 1.0 - ( (abs(x[0]))*(abs(x[0]))
+          s_ext[Yvel] = prob_parm.v_bc[zoneR] * std::pow(2.0, ( 1.0 - ( (std::abs(x[0]))*(std::abs(x[0]))
                                                                         / (prob_parm.fuel_ox_split*prob_parm.fuel_ox_split) ) ) );
 #if ( AMREX_SPACEDIM == 3 )
           s_ext[Zvel] = 0.0;
@@ -230,10 +232,11 @@ bcnormal(
     } else if (zone==prob_parm.BL_OXIDIZER) {
           zoneL = prob_parm.BL_PIPEEND;
           zoneR = prob_parm.BL_OXIDIZER;
+
           if (x[0]<(prob_parm.fuel_ox_split+prob_parm.pipeTh+prob_parm.Vel_zero_th)) {
             s_ext[Yvel] = 0.0;            
           } else {
-            amrex::Real r = abs(x[0]) - (prob_parm.fuel_ox_split+prob_parm.pipeTh);
+            amrex::Real r = std::abs(x[0]) - (prob_parm.fuel_ox_split+prob_parm.pipeTh);
             eta = (1.0 - tanh(2.0*r/prob_parm.pipeBL));
             s_ext[Yvel] = prob_parm.v_bc[zoneL]*eta + prob_parm.v_bc[zoneR]*(1.0-eta);
           }
@@ -278,14 +281,12 @@ pelelm_initdata (int i, int j, int k,
     const amrex::Real coor[AMREX_SPACEDIM] = {AMREX_D_DECL(x,y,z)};
     amrex::Real s_ext[DEF_NUM_STATE] = {0.0};
 
-
     bcnormal(coor, s_ext, 0, 1, 0, geomdata, prob_parm, *(PeleLM::ac_parm.get()), pmf_data);
-
+ 
     for (int n = 0; n < NUM_SPECIES; n++){
-      
+
       massfrac[n]= s_ext[DEF_first_spec+n]/s_ext[Density];
     }
-
     state(i,j,k,DEF_Temp) = s_ext[DEF_Temp];
 
     if (prob_parm.blobr>0.0)
