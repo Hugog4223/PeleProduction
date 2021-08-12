@@ -1,33 +1,34 @@
-TOP = /home/hugog/PeleProduction/Submodules
-AMREX_HOME ?= ${TOP}/amrex
-IAMR_HOME ?= ${TOP}/IAMR
-PELE_PHYSICS_HOME ?= ${TOP}/PelePhysics
-PELELM_HOME ?= ${TOP}/PeleLM
-AMREX_HYDRO_HOME	 = ${TOP}/AMReX-Hydro
+SUBMODS ?= /Users/mday2/src/CCSE/Pele/ALT/HUGO/PeleProduction/Submodules
+AMREX_HOME         ?= ${SUBMODS}/amrex
+IAMR_HOME          ?= ${SUBMODS}/IAMR
+PELE_PHYSICS_HOME  ?= ${SUBMODS}/PelePhysics
+PELELM_HOME        ?= ${SUBMODS}/PeleLM
+AMREX_HYDRO_HOME   ?= ${SUBMODS}/AMReX-Hydro
 
 DIM             = 2
 COMP            = gnu
-DEBUG           = FALSE
 USE_MPI         = TRUE
 USE_OMP         = FALSE
-USE_CUBA        = FALSE
+USE_CUDA        = FALSE
+USE_HIP         = FALSE
+
+DEBUG           = TRUE
 PRECISION       = DOUBLE
 VERBOSE         = FALSE
+TINY_PROFILE    = FALSE
 
-Reactions_dir   := Fuego
-Transport_dir   := Simple
-Eos_dir         := Fuego
-Chemistry_Model := drm19
-
-# CVODE
 USE_SUNDIALS_PP = TRUE
 USE_KLU_PP      = FALSE
 
+Chemistry_Model = drm19
+Eos_Model       = Fuego
+Reactor_dir     = cvode
+Transport_Model = Simple
+
 Blocs   := .
 
-CEXE_sources +=
-F90EXE_sources +=
-CEXE_headers += 
-FEXE_headers += 
-
 include $(PELELM_HOME)/Tools/Make/Make.PeleLM
+
+ifeq ($(USE_CUDA),TRUE)
+CXXFLAGS += -Xptxas --disable-optimizer-constants
+endif
