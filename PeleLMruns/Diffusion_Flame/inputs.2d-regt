@@ -23,12 +23,12 @@ amr.blocking_factor = 16               # block factor in grid generation (min bo
 amr.max_grid_size   = 128              # max box size
 
 #----------------------TIME STEPING (dt) CONTROL----------------------
-max_step  = 200 
+max_step  = 1000  #4heures
 #max_step  = 4
 #max_step = 36000                      # maximum number of time steps
 stop_time           = 4.0              # final physical time
 #will end the calculation when either the simulation time reaches 4.0 or the number of level 0 steps taken equals max_step, whichever comes first
-ns.cfl              = 0.2              # cfl number for hyperbolic system
+ns.cfl              = 0.2  #0.2              # cfl number for hyperbolic system
 ns.init_shrink    = 0.1                # scale back initial timestep (sets the first timestep we take to be 10% of what it would be otherwise)
 ns.change_max       = 1.1              # max timestep size increase (can't increase more than 10%)
 ns.dt_cutoff        = 5.e-10           # level 0 timestep below which we halt
@@ -36,8 +36,8 @@ ns.dt_cutoff        = 5.e-10           # level 0 timestep below which we halt
 #-------------------------IO CONTROL(restart and Plotfile)----------------------------
 amr.checkpoint_files_output = 1  #0
 amr.check_file          = chk         # root name of checkpoint file
-amr.check_int           = 25            # number of timesteps between checkpoints
-#amr.restart = chk00300
+amr.check_int           = 19            # number of timesteps between checkpoints
+amr.restart = chk00019
 amr.plot_file           = plt_         # root name of plot file
 amr.plot_int            = 100          # number of timesteps between plot files
 amr.derive_plot_vars    = rhoRT mag_vort mass_fractions
@@ -106,7 +106,6 @@ cvode.solve_type = dense               # CVODE Linear solve type (for Newton dir
 ode.analytical_jacobian = 0            # Provide analytical jacobian (from Fuego) ?
 peleLM.deltaT_verbose=1
 #peleLM.deltaT_norm_max= 1.0e-6
-#peleLM.num_deltaT_iters_MAX=15   
 
 # ------------------  INPUTS TO ACTIVE CONTROL  ----------------------
 ns.do_active_control = 0               # Turn on active control of the inflow velocity
