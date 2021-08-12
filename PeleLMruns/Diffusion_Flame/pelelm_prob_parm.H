@@ -20,7 +20,7 @@ struct ProbParm
    amrex::Real bloby = 0.00127;
    amrex::Real blobr = 0.001;
    amrex::Real blobw = 0.000001;            /* initial spark withd */
-   amrex::Real blobT = 1900;              /* initial spark Temperature */  
+   amrex::Real blobT = 1300;              /* initial spark Temperature */  
    amrex::Real V_fu = 0.3990;     /* change */
    amrex::Real V_ox = 0.462;     /* change */  
    amrex::Real V_air = 0;

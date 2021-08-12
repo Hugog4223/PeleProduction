@@ -23,8 +23,8 @@ amr.blocking_factor = 16               # block factor in grid generation (min bo
 amr.max_grid_size   = 128              # max box size
 
 #----------------------TIME STEPING (dt) CONTROL----------------------
-#max_step  = 4000
-max_step  = 4
+max_step  = 200 
+#max_step  = 4
 #max_step = 36000                      # maximum number of time steps
 stop_time           = 4.0              # final physical time
 #will end the calculation when either the simulation time reaches 4.0 or the number of level 0 steps taken equals max_step, whichever comes first
@@ -34,9 +34,10 @@ ns.change_max       = 1.1              # max timestep size increase (can't incre
 ns.dt_cutoff        = 5.e-10           # level 0 timestep below which we halt
 
 #-------------------------IO CONTROL(restart and Plotfile)----------------------------
-amr.checkpoint_files_output = 0
-amr.check_file          = chk          # root name of checkpoint file
-amr.check_int           = 5            # number of timesteps between checkpoints
+amr.checkpoint_files_output = 1  #0
+amr.check_file          = chk         # root name of checkpoint file
+amr.check_int           = 25            # number of timesteps between checkpoints
+#amr.restart = chk00300
 amr.plot_file           = plt_         # root name of plot file
 amr.plot_int            = 100          # number of timesteps between plot files
 amr.derive_plot_vars    = rhoRT mag_vort mass_fractions
@@ -53,9 +54,9 @@ prob.blobx = 0.001                #initial spark positionx
 prob.bloby = 0.00127
 prob.blobr = 0.001
 prob.blobw = 0.000001             #Initial spark withd
-prob.blobT = 1300       #1900     #Initial spark Temperature
-prob.V_fu = 0.30     #change
-prob.V_ox = 0.30     #change
+prob.blobT = 1300       #1300     #Initial spark Temperature
+prob.V_fu = 0.3990     #change
+prob.V_ox = 0.462     #change
 prob.V_air = 0
 prob.T_fu = 510.0     #change
 prob.T_ox = 510.0     #change
@@ -103,6 +104,9 @@ ns.init_shrink    = 0.1       # scale back initial timestep
 #peleLM.absolute_tol_chem = 1.0e-6     # CVODE absolute tolerance
 cvode.solve_type = dense               # CVODE Linear solve type (for Newton direction) 
 ode.analytical_jacobian = 0            # Provide analytical jacobian (from Fuego) ?
+peleLM.deltaT_verbose=1
+#peleLM.deltaT_norm_max= 1.0e-6
+#peleLM.num_deltaT_iters_MAX=15   
 
 # ------------------  INPUTS TO ACTIVE CONTROL  ----------------------
 ns.do_active_control = 0               # Turn on active control of the inflow velocity
@@ -144,7 +148,7 @@ diffuse.use_cg_solve = 0
 diffuse.max_order = 4
 diffuse.tensor_max_order = 4
 diffuse.use_tensor_cg_solve = 0
-diffuse.v = 1  #0
+diffuse.v = 0  #if pb =1
 diffuse.Rhs_in_abs_tol = 1
 
 # ------------------  INPUTS TO PROJECTION CLASS -------------------
@@ -159,8 +163,8 @@ proj.do_outflow_bcs      = 0
 proj.divu_minus_s_factor = .5
 proj.divu_minus_s_factor = 0.
 proj.proj_2              = 1
-nodal_proj.verbose       = 5    #change?
-proj.v                   = 1     #0
+nodal_proj.verbose       = 0    #if pb =5
+proj.v                   = 0     #if pb =1
 proj.filter_factor  = 0.0
 
 # ------------------  INPUTS TO MACPROJ CLASS -------------------
@@ -169,7 +173,7 @@ mac.mac_sync_tol         = 1.0e-8     # tolerence for mac SYNC projection
 mac.mac_abs_tol          = 1.0e-14
 mac.use_cg_solve         = 0
 mac.do_outflow_bcs       = 0
-mac.v                    = 1          #0
+mac.v                    = 0          #if pb =1
 
 #--------------------------OMP TILE INPUTS-----------------------------
 #fabarray.mfiter_tile_size = 8 8 8
@@ -205,9 +209,9 @@ ht.plot_heat_release=1
 
 # multigrid class
 mg.usecg = 1
-cg.v = 1     #0
+cg.v = 0     #1 if pb
 cg.isExpert=1
-mg.v = 1     #0
+mg.v = 0     #1 if pb
 cg.maxiter = 1000
 mg.maxiter = 1000
 mg.nu_0 = 1
